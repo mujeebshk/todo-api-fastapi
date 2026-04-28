@@ -3,4 +3,4 @@ __pycache__/
 *.pyc
 todo.db
 .env
-.txt
+requirements.txt
