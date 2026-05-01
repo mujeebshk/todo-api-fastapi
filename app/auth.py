@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, timedelta
-from jose import jwt
+from jose import jwt, JWTError
 from passlib.context import CryptContext
 from dotenv import load_dotenv
 from fastapi import Depends, HTTPException
@@ -11,6 +11,10 @@ from app import models
 
 load_dotenv()
 
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
@@ -22,7 +26,7 @@ def get_current_user(
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = int(payload.get("sub"))
-    except:
+    except (JWTError, ValueError, TypeError):
         raise HTTPException(status_code=401, detail="Unauthorized")
 
     user = db.query(models.User).filter(models.User.id == user_id).first()
@@ -31,12 +35,6 @@ def get_current_user(
         raise HTTPException(status_code=401, detail="Unauthorized")
 
     return user
-
-
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("ALGORITHM")
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def hash_password(password: str):
