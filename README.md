@@ -75,11 +75,13 @@ Open the deployed GitHub Pages URL with `?debug` at the end, then open the brows
 https://your-github-pages-url/?debug
 ```
 
-When you add a task, the console prints `[Todo Debug]` entries for Firebase config, auth state, API request URL, response status, response body, and network/CORS failures.
+When you add a task, the console prints `[Todo Debug]` entries for Firebase config, auth state, storage mode, Firestore snapshots, API requests, response status, response body, and network/CORS failures.
 
 If task creation fails only after deployment, check these first:
 
 - GitHub Actions secret `FIREBASE_API_KEY` is set, because `docs/firebase-config.js` starts with `YOUR_API_KEY`.
-- Render env var `ALLOWED_ORIGINS` includes your GitHub Pages origin, for example `https://your-user.github.io`.
-- Render env var `FIREBASE_PROJECT_ID` matches `projectId` in `docs/firebase-config.js`.
-- `apiBaseUrl` in `docs/firebase-config.js` points to the live Render API with no trailing path.
+- `dataMode` is `"firestore"` in `docs/firebase-config.js` if you want tasks stored in Firebase.
+- Firestore Database exists in Firebase Console.
+- `firestore.rules` is published in Firebase Console > Firestore Database > Rules.
+- Your GitHub Pages domain is allowed in Firebase Authentication > Settings > Authorized domains.
+- If `dataMode` is changed to `"api"`, then Render env var `ALLOWED_ORIGINS` must include your GitHub Pages origin and `FIREBASE_PROJECT_ID` must match `projectId`.

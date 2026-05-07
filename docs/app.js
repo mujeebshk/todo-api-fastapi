@@ -14,6 +14,7 @@ import {
   deleteDoc,
   doc,
   getFirestore,
+  getDocs,
   onSnapshot,
   orderBy,
   query,
@@ -30,6 +31,7 @@ const statuses = [
 
 const config = window.TODO_FIREBASE_CONFIG || {};
 const missingConfig = !config.apiKey || config.apiKey === "YOUR_API_KEY";
+const dataMode = config.dataMode || "firestore";
 const debugEnabled =
   new URLSearchParams(window.location.search).has("debug") ||
   localStorage.getItem("todoDebug") === "1";
@@ -186,6 +188,142 @@ function userDoc(name, id) {
   return doc(db, "users", activeUser.uid, name, id);
 }
 
+async function createTodo(payload) {
+  if (dataMode === "api") {
+    return apiCall("POST", "/todos", payload);
+  }
+
+  return addDoc(userCollection("todos"), {
+    ...payload,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+}
+
+async function updateTodo(todo, patch) {
+  if (dataMode === "api") {
+    return apiCall("PUT", `/todos/${todo.id}`, {
+      ...todo,
+      ...patch,
+    });
+  }
+
+  return updateDoc(userDoc("todos", todo.id), {
+    ...patch,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+async function removeTodo(id) {
+  if (dataMode === "api") {
+    return apiCall("DELETE", `/todos/${id}`);
+  }
+
+  return deleteDoc(userDoc("todos", id));
+}
+
+async function createNote(payload) {
+  if (dataMode === "api") {
+    return apiCall("POST", "/notes", {
+      title: payload.title,
+      body: payload.body,
+      parent_id: payload.parentId,
+    });
+  }
+
+  return addDoc(userCollection("notes"), {
+    ...payload,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+}
+
+async function updateNote(id, payload) {
+  if (dataMode === "api") {
+    return apiCall("PUT", `/notes/${id}`, {
+      title: payload.title,
+      body: payload.body,
+    });
+  }
+
+  return updateDoc(userDoc("notes", id), {
+    ...payload,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+async function removeNote(id) {
+  if (dataMode === "api") {
+    return apiCall("DELETE", `/notes/${id}`);
+  }
+
+  return deleteDoc(userDoc("notes", id));
+}
+
+function normalizeFirestoreDoc(snapshot) {
+  return {
+    id: snapshot.id,
+    ...snapshot.data(),
+  };
+}
+
+async function refreshFromApi() {
+  const todoRes = await apiCall("GET", "/todos");
+  todos = todoRes?.data || [];
+  notes = (await apiCall("GET", "/notes")) || [];
+  renderBoard();
+  renderNotes();
+}
+
+async function refreshFromFirestore() {
+  const [todoSnapshots, noteSnapshots] = await Promise.all([
+    getDocs(query(userCollection("todos"), orderBy("createdAt", "desc"))),
+    getDocs(query(userCollection("notes"), orderBy("createdAt", "desc"))),
+  ]);
+
+  todos = todoSnapshots.docs.map(normalizeFirestoreDoc);
+  notes = noteSnapshots.docs.map(normalizeFirestoreDoc);
+  renderBoard();
+  renderNotes();
+}
+
+function subscribeToFirestoreData() {
+  unsubscribeTodos?.();
+  unsubscribeNotes?.();
+
+  unsubscribeTodos = onSnapshot(
+    query(userCollection("todos"), orderBy("createdAt", "desc")),
+    (snapshot) => {
+      todos = snapshot.docs.map(normalizeFirestoreDoc);
+      debugLog("Firestore todos snapshot", { todoCount: todos.length });
+      renderBoard();
+    },
+    (error) => {
+      debugError("Firestore todos snapshot failed", error, {
+        hint:
+          "Check Firestore rules, Firebase projectId, and that Firestore Database is created.",
+      });
+      setMessage(formatError(error));
+    },
+  );
+
+  unsubscribeNotes = onSnapshot(
+    query(userCollection("notes"), orderBy("createdAt", "desc")),
+    (snapshot) => {
+      notes = snapshot.docs.map(normalizeFirestoreDoc);
+      debugLog("Firestore notes snapshot", { noteCount: notes.length });
+      renderNotes();
+    },
+    (error) => {
+      debugError("Firestore notes snapshot failed", error, {
+        hint:
+          "Check Firestore rules, Firebase projectId, and that Firestore Database is created.",
+      });
+      setMessage(formatError(error));
+    },
+  );
+}
+
 function formatError(error) {
   return (
     error?.message?.replace("Firebase: ", "").replace(/\.$/, "") ||
@@ -229,16 +367,23 @@ function renderTask(todo) {
   const select = node.querySelector("select");
   select.value = todo.status;
   select.addEventListener("change", async () => {
-    await apiCall("PUT", `/todos/${todo.id}`, {
-      ...todo,
-      status: select.value,
-    });
-    await refreshData();
+    try {
+      await updateTodo(todo, { status: select.value });
+      await refreshData();
+    } catch (error) {
+      debugError("Update task failed", error, { id: todo.id });
+      setMessage(formatError(error));
+    }
   });
 
   node.querySelector("button").addEventListener("click", async () => {
-    await apiCall("DELETE", `/todos/${todo.id}`);
-    await refreshData();
+    try {
+      await removeTodo(todo.id);
+      await refreshData();
+    } catch (error) {
+      debugError("Delete task failed", error, { id: todo.id });
+      setMessage(formatError(error));
+    }
   });
 
   return node;
@@ -283,8 +428,13 @@ function buildNoteBranch(parentId) {
         noteButton("Child", () => startNote({ parentId: note.id })),
         noteButton("Edit", () => startNote({ note })),
         noteButton("Delete", async () => {
-          await apiCall("DELETE", `/notes/${note.id}`);
-          await refreshData();
+          try {
+            await removeNote(note.id);
+            await refreshData();
+          } catch (error) {
+            debugError("Delete note failed", error, { id: note.id });
+            setMessage(formatError(error));
+          }
         }),
       );
 
@@ -322,10 +472,13 @@ async function refreshData() {
     debugLog("Refresh started", {
       uid: activeUser.uid,
       email: activeUser.email,
+      dataMode,
     });
-    const todoRes = await apiCall("GET", "/todos");
-    todos = todoRes?.data || [];
-    notes = (await apiCall("GET", "/notes")) || [];
+    if (dataMode === "api") {
+      await refreshFromApi();
+    } else {
+      await refreshFromFirestore();
+    }
     debugLog("Refresh completed", {
       todoCount: todos.length,
       noteCount: notes.length,
@@ -350,6 +503,7 @@ if (missingConfig) {
     authDomain: config.authDomain,
     projectId: config.projectId,
     apiBaseUrl: config.apiBaseUrl,
+    dataMode,
     host: window.location.host,
   });
 
@@ -370,8 +524,16 @@ if (missingConfig) {
     userEmail.textContent = user?.email || "";
 
     if (user) {
-      refreshData();
+      if (dataMode === "api") {
+        refreshData();
+      } else {
+        subscribeToFirestoreData();
+      }
     } else {
+      unsubscribeTodos?.();
+      unsubscribeNotes?.();
+      unsubscribeTodos = null;
+      unsubscribeNotes = null;
       todos = [];
       notes = [];
       renderBoard();
@@ -439,7 +601,7 @@ todoForm.addEventListener("submit", async (event) => {
   debugLog("Add task submitted", payload);
 
   try {
-    await apiCall("POST", "/todos", payload);
+    await createTodo(payload);
     await refreshData();
     todoForm.reset();
     debugLog("Add task completed");
@@ -464,9 +626,9 @@ noteForm.addEventListener("submit", async (event) => {
   };
 
   if (editingNoteId) {
-    await apiCall("PUT", `/notes/${editingNoteId}`, payload);
+    await updateNote(editingNoteId, payload);
   } else {
-    await apiCall("POST", "/notes", payload);
+    await createNote(payload);
   }
 
   await refreshData();

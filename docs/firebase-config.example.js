@@ -6,5 +6,6 @@ window.TODO_FIREBASE_CONFIG = {
   messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
   appId: "YOUR_APP_ID",
   measurementId: "YOUR_MEASUREMENT_ID",
+  dataMode: "firestore",
   apiBaseUrl: "https://your-api-on-render.com",
 };
