@@ -1,14 +1,17 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Todo Workspace</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./styles.css?v=20260507">
-    <script src="./firebase-config.js?v=20260507"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./firebase-config.js"></script>
   </head>
   <body>
     <main class="shell">
@@ -23,21 +26,33 @@
 
         <form class="auth-card" id="authForm">
           <div class="tabs" role="tablist" aria-label="Authentication mode">
-            <button class="tab is-active" type="button" id="loginTab">Login</button>
+            <button class="tab is-active" type="button" id="loginTab">
+              Login
+            </button>
             <button class="tab" type="button" id="signupTab">Sign up</button>
           </div>
 
           <label>
             Email
-            <input id="emailInput" type="email" autocomplete="email" required>
+            <input id="emailInput" type="email" autocomplete="email" required />
           </label>
           <label>
             Password
-            <input id="passwordInput" type="password" autocomplete="current-password" minlength="6" required>
+            <input
+              id="passwordInput"
+              type="password"
+              autocomplete="current-password"
+              minlength="6"
+              required
+            />
           </label>
 
-          <button class="primary" type="submit" id="emailAuthButton">Login</button>
-          <button class="secondary" type="button" id="googleButton">Continue with Google</button>
+          <button class="primary" type="submit" id="emailAuthButton">
+            Login
+          </button>
+          <button class="secondary" type="button" id="googleButton">
+            Continue with Google
+          </button>
           <p class="message" id="authMessage" role="status"></p>
         </form>
       </section>
@@ -58,7 +73,9 @@
               title="GitHub repository"
             >
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path d="M12 .5a12 12 0 0 0-3.8 23.38c.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.42-4.04-1.42-.55-1.38-1.33-1.75-1.33-1.75-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.23 1.84 1.23 1.07 1.83 2.8 1.3 3.49.99.11-.77.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.53.12-3.18 0 0 1.01-.32 3.3 1.23A11.46 11.46 0 0 1 12 5.78c1.02 0 2.04.14 3 .41 2.28-1.55 3.29-1.23 3.29-1.23.66 1.65.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.49 5.92.43.37.82 1.1.82 2.22v3.3c0 .32.21.7.83.58A12 12 0 0 0 12 .5Z"/>
+                <path
+                  d="M12 .5a12 12 0 0 0-3.8 23.38c.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.42-4.04-1.42-.55-1.38-1.33-1.75-1.33-1.75-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.23 1.84 1.23 1.07 1.83 2.8 1.3 3.49.99.11-.77.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.53.12-3.18 0 0 1.01-.32 3.3 1.23A11.46 11.46 0 0 1 12 5.78c1.02 0 2.04.14 3 .41 2.28-1.55 3.29-1.23 3.29-1.23.66 1.65.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.49 5.92.43.37.82 1.1.82 2.22v3.3c0 .32.21.7.83.58A12 12 0 0 0 12 .5Z"
+                />
               </svg>
             </a>
             <div class="account-menu">
@@ -69,11 +86,18 @@
                 aria-label="Open account menu"
                 aria-expanded="false"
               >
-                <img id="userAvatar" alt="" referrerpolicy="no-referrer" class="is-hidden">
+                <img
+                  id="userAvatar"
+                  alt=""
+                  referrerpolicy="no-referrer"
+                  class="is-hidden"
+                />
                 <span id="userInitials">U</span>
               </button>
               <div class="account-dropdown is-hidden" id="accountDropdown">
-                <button class="ghost" type="button" id="logoutButton">Logout</button>
+                <button class="ghost" type="button" id="logoutButton">
+                  Logout
+                </button>
               </div>
             </div>
           </div>
@@ -81,8 +105,19 @@
 
         <section class="composer">
           <form id="todoForm" class="task-form">
-            <input id="todoTitle" type="text" placeholder="Task title" maxlength="90" required>
-            <input id="todoDetails" type="text" placeholder="Details or next action" maxlength="220">
+            <input
+              id="todoTitle"
+              type="text"
+              placeholder="Task title"
+              maxlength="90"
+              required
+            />
+            <input
+              id="todoDetails"
+              type="text"
+              placeholder="Details or next action"
+              maxlength="220"
+            />
             <select id="todoStatus" aria-label="Task status">
               <option value="do">Do</option>
               <option value="did">Did</option>
@@ -102,13 +137,32 @@
                 <p class="eyebrow">Tree Notes</p>
                 <h3>Notes</h3>
               </div>
-              <button class="icon-button" type="button" id="rootNoteButton" title="Add root note">+</button>
+              <button
+                class="icon-button"
+                type="button"
+                id="rootNoteButton"
+                title="Add root note"
+              >
+                +
+              </button>
             </div>
             <form class="note-editor" id="noteForm">
-              <input id="noteTitle" type="text" placeholder="Note title" maxlength="100" required>
-              <textarea id="noteBody" rows="5" placeholder="Write the note"></textarea>
+              <input
+                id="noteTitle"
+                type="text"
+                placeholder="Note title"
+                maxlength="100"
+                required
+              />
+              <textarea
+                id="noteBody"
+                rows="5"
+                placeholder="Write the note"
+              ></textarea>
               <div class="note-actions">
-                <button class="secondary" type="button" id="cancelNoteButton">Cancel</button>
+                <button class="secondary" type="button" id="cancelNoteButton">
+                  Cancel
+                </button>
                 <button class="primary" type="submit">Save note</button>
               </div>
             </form>
@@ -136,6 +190,6 @@
       </article>
     </template>
 
-    <script type="module" src="./app.js?v=20260507"></script>
+    <script type="module" src="./app.js"></script>
   </body>
 </html>
