@@ -14,6 +14,9 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   deploy:
     environment:
@@ -23,6 +26,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: Inject Firebase Secret
+        run: |
+          # Replaces the placeholder with the secret stored in GitHub Actions
+          sed -i "s/YOUR_API_KEY/${{ secrets.FIREBASE_API_KEY }}/g" docs/firebase-config.js
       - uses: actions/upload-pages-artifact@v3
         with:
           path: docs

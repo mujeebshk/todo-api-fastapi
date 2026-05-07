@@ -1,9 +1,10 @@
 window.TODO_FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCjFvBHYdqIMIY-VdUDdLV3yAC7qro0VCI",
-  authDomain: "todo-app-87bcf.firebaseapp.com",
-  projectId: "todo-app-87bcf",
-  storageBucket: "todo-app-87bcf.firebasestorage.app",
-  messagingSenderId: "1026807601445",
-  appId: "1:1026807601445:web:7cfea565922c28eee6a2cc",
-  measurementId: "G-ZWD67GXH4D",
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.firebasestorage.app",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID",
+  measurementId: "YOUR_MEASUREMENT_ID",
+  apiBaseUrl: "https://your-api-on-render.com",
 };
