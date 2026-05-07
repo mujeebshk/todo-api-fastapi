@@ -30,6 +30,9 @@ const statuses = [
 
 const config = window.TODO_FIREBASE_CONFIG || {};
 const missingConfig = !config.apiKey || config.apiKey === "YOUR_API_KEY";
+const debugEnabled =
+  new URLSearchParams(window.location.search).has("debug") ||
+  localStorage.getItem("todoDebug") === "1";
 
 const authPanel = document.querySelector("#authPanel");
 const appPanel = document.querySelector("#appPanel");
@@ -67,6 +70,21 @@ let parentNoteId = null;
 let unsubscribeTodos = null;
 let unsubscribeNotes = null;
 
+function debugLog(label, data = {}) {
+  if (!debugEnabled) return;
+  console.log(`[Todo Debug] ${label}`, data);
+}
+
+function debugError(label, error, data = {}) {
+  console.error(`[Todo Debug] ${label}`, {
+    ...data,
+    name: error?.name,
+    code: error?.code,
+    message: error?.message,
+    stack: error?.stack,
+  });
+}
+
 function setMessage(message) {
   authMessage.textContent = message || "";
 }
@@ -82,17 +100,82 @@ function setAuthMode(mode) {
 }
 
 async function apiCall(method, path, body = null) {
-  if (!activeUser) return;
+  if (!activeUser) {
+    const error = new Error("No authenticated user is available");
+    debugError("API skipped", error, { method, path });
+    throw error;
+  }
+
+  if (!config.apiBaseUrl) {
+    const error = new Error("Missing apiBaseUrl in Firebase config");
+    debugError("API skipped", error, { method, path, config });
+    throw error;
+  }
+
+  const url = `${config.apiBaseUrl.replace(/\/$/, "")}${path}`;
   const token = await activeUser.getIdToken();
-  const response = await fetch(`${config.apiBaseUrl}${path}`, {
+  const requestId = crypto.randomUUID?.() || String(Date.now());
+  const startedAt = performance.now();
+
+  debugLog("API request", {
+    requestId,
     method,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: body ? JSON.stringify(body) : null,
+    path,
+    url,
+    hasToken: Boolean(token),
+    uid: activeUser.uid,
+    body,
   });
-  return response.json();
+
+  let response;
+  try {
+    response = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: body ? JSON.stringify(body) : null,
+    });
+  } catch (error) {
+    debugError("API network/CORS failure", error, {
+      requestId,
+      method,
+      path,
+      url,
+      hint:
+        "If this only happens after GitHub Pages deployment, check Render CORS ALLOWED_ORIGINS and that apiBaseUrl is reachable.",
+    });
+    throw error;
+  }
+
+  const contentType = response.headers.get("content-type") || "";
+  const responseBody = contentType.includes("application/json")
+    ? await response.json().catch(() => null)
+    : await response.text().catch(() => "");
+
+  debugLog("API response", {
+    requestId,
+    method,
+    path,
+    url,
+    ok: response.ok,
+    status: response.status,
+    statusText: response.statusText,
+    durationMs: Math.round(performance.now() - startedAt),
+    body: responseBody,
+  });
+
+  if (!response.ok) {
+    const error = new Error(
+      `API ${method} ${path} failed with ${response.status}`,
+    );
+    error.response = responseBody;
+    error.status = response.status;
+    throw error;
+  }
+
+  return responseBody;
 }
 
 function userCollection(name) {
@@ -235,23 +318,52 @@ function clearNoteForm() {
 
 async function refreshData() {
   if (!activeUser) return;
-  const todoRes = await apiCall("GET", "/todos");
-  todos = todoRes.data || [];
-  notes = (await apiCall("GET", "/notes")) || [];
-  renderBoard();
-  renderNotes();
+  try {
+    debugLog("Refresh started", {
+      uid: activeUser.uid,
+      email: activeUser.email,
+    });
+    const todoRes = await apiCall("GET", "/todos");
+    todos = todoRes?.data || [];
+    notes = (await apiCall("GET", "/notes")) || [];
+    debugLog("Refresh completed", {
+      todoCount: todos.length,
+      noteCount: notes.length,
+    });
+    renderBoard();
+    renderNotes();
+  } catch (error) {
+    debugError("Refresh failed", error);
+    setMessage(formatError(error));
+  }
 }
 
 if (missingConfig) {
+  debugError("Firebase config missing", new Error("Missing Firebase apiKey"), {
+    config,
+  });
   setMessage(
     "Add your Firebase values in docs/firebase-config.js before using the app.",
   );
 } else {
+  debugLog("Firebase init", {
+    authDomain: config.authDomain,
+    projectId: config.projectId,
+    apiBaseUrl: config.apiBaseUrl,
+    host: window.location.host,
+  });
+
   const app = initializeApp(config);
   auth = getAuth(app);
   db = getFirestore(app);
 
   onAuthStateChanged(auth, (user) => {
+    debugLog("Auth state changed", {
+      signedIn: Boolean(user),
+      uid: user?.uid,
+      email: user?.email,
+    });
+
     activeUser = user;
     authPanel.classList.toggle("is-hidden", Boolean(user));
     appPanel.classList.toggle("is-hidden", !user);
@@ -292,6 +404,10 @@ authForm.addEventListener("submit", async (event) => {
     }
     authForm.reset();
   } catch (error) {
+    debugError("Email auth failed", error, {
+      mode: authMode,
+      email: emailInput.value,
+    });
     setMessage(formatError(error));
   }
 });
@@ -303,6 +419,7 @@ googleButton.addEventListener("click", async () => {
     setMessage("");
     await signInWithPopup(auth, new GoogleAuthProvider());
   } catch (error) {
+    debugError("Google auth failed", error);
     setMessage(formatError(error));
   }
 });
@@ -313,13 +430,23 @@ todoForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   if (!activeUser) return;
 
-  await apiCall("POST", "/todos", {
+  const payload = {
     title: todoTitle.value.trim(),
     details: todoDetails.value.trim(),
     status: todoStatus.value,
-  });
-  await refreshData();
-  todoForm.reset();
+  };
+
+  debugLog("Add task submitted", payload);
+
+  try {
+    await apiCall("POST", "/todos", payload);
+    await refreshData();
+    todoForm.reset();
+    debugLog("Add task completed");
+  } catch (error) {
+    debugError("Add task failed", error, { payload });
+    setMessage(formatError(error));
+  }
 });
 
 rootNoteButton.addEventListener("click", () => startNote());

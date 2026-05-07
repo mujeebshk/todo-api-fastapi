@@ -66,3 +66,20 @@ Todo statuses are `do`, `did`, `done`, and `block`. Notes support tree hierarchy
 This repo includes `.github/workflows/pages.yml`. After pushing to `main`, enable GitHub Pages with **GitHub Actions** as the source in repository settings.
 
 GitHub Pages serves only the static files in `docs/`. Django does not run on GitHub Pages; it is for local development.
+
+## Debug Deployed Task Creation
+
+Open the deployed GitHub Pages URL with `?debug` at the end, then open the browser console.
+
+```text
+https://your-github-pages-url/?debug
+```
+
+When you add a task, the console prints `[Todo Debug]` entries for Firebase config, auth state, API request URL, response status, response body, and network/CORS failures.
+
+If task creation fails only after deployment, check these first:
+
+- GitHub Actions secret `FIREBASE_API_KEY` is set, because `docs/firebase-config.js` starts with `YOUR_API_KEY`.
+- Render env var `ALLOWED_ORIGINS` includes your GitHub Pages origin, for example `https://your-user.github.io`.
+- Render env var `FIREBASE_PROJECT_ID` matches `projectId` in `docs/firebase-config.js`.
+- `apiBaseUrl` in `docs/firebase-config.js` points to the live Render API with no trailing path.

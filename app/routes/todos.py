@@ -17,6 +17,7 @@ def create_todo(
     new_todo = models.Todo(
         title=todo.title,
         details=todo.details,
+        status=todo.status,
         owner_id=current_user.id
     )
 

@@ -16,7 +16,8 @@ class UserLogin(BaseModel):
 
 class TodoCreate(BaseModel):
     title: str = Field(..., min_length=3, max_length=100)
-    details: str = Field(..., min_length=3, max_length=300)
+    details: str = Field("", max_length=300)
+    status: TodoStatus = "do"
 
 class TodoUpdate(BaseModel):
     title: str
