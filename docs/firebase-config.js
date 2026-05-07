@@ -1,5 +1,5 @@
 window.TODO_FIREBASE_CONFIG = {
-  apiKey: "YOUR_API_KEY",
+  apiKey: "AIzaSyCjFvBHYdqIMIY-VdUDdLV3yAC7qro0VCI",
   authDomain: "todo-app-87bcf.firebaseapp.com",
   projectId: "todo-app-87bcf",
   storageBucket: "todo-app-87bcf.firebasestorage.app",
