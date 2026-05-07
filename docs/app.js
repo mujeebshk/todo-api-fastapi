@@ -361,6 +361,23 @@ function subscribeToFirestoreData() {
 }
 
 function formatError(error) {
+  const messages = {
+    "auth/email-already-in-use":
+      "This email already has an account. Use Login instead.",
+    "auth/invalid-credential":
+      "Invalid email or password. If this is a new email, select Sign up first.",
+    "auth/invalid-email": "Enter a valid email address.",
+    "auth/popup-closed-by-user": "Google sign-in was closed before finishing.",
+    "auth/too-many-requests":
+      "Too many attempts. Wait a moment, then try again.",
+    "auth/user-disabled": "This account has been disabled.",
+    "auth/weak-password": "Use a password with at least 6 characters.",
+  };
+
+  if (error?.code && messages[error.code]) {
+    return messages[error.code];
+  }
+
   return (
     error?.message?.replace("Firebase: ", "").replace(/\.$/, "") ||
     "Something went wrong"

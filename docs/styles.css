@@ -211,6 +211,12 @@ textarea:focus {
   font-size: 0.9rem;
 }
 
+.auth-hint {
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
 .is-hidden {
   display: none !important;
 }
