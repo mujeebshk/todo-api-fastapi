@@ -16,7 +16,7 @@ def create_todo(
 ):
     new_todo = models.Todo(
         title=todo.title,
-        description=todo.description,
+        details=todo.details,
         owner_id=current_user.id
     )
 
@@ -81,9 +81,9 @@ def update_todo(
     if db_todo.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="Forbidden")
 
-    db_todo.title = todo.title
-    db_todo.description = todo.description
-    db_todo.status = todo.status
+    db_todo.title = todo.title      # type: ignore
+    db_todo.details = todo.details  # type: ignore
+    db_todo.status = todo.status    # type: ignore
 
     db.commit()
     db.refresh(db_todo)

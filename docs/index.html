@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Todo Workspace</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css">
+    <script src="./firebase-config.js"></script>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="auth-panel" id="authPanel">
+        <div class="brand">
+          <span class="brand-mark">T</span>
+          <div>
+            <h1>Todo Workspace</h1>
+            <p>Tasks, blockers, and nested notes in one focused view.</p>
+          </div>
+        </div>
+
+        <form class="auth-card" id="authForm">
+          <div class="tabs" role="tablist" aria-label="Authentication mode">
+            <button class="tab is-active" type="button" id="loginTab">Login</button>
+            <button class="tab" type="button" id="signupTab">Sign up</button>
+          </div>
+
+          <label>
+            Email
+            <input id="emailInput" type="email" autocomplete="email" required>
+          </label>
+          <label>
+            Password
+            <input id="passwordInput" type="password" autocomplete="current-password" minlength="6" required>
+          </label>
+
+          <button class="primary" type="submit" id="emailAuthButton">Login</button>
+          <button class="secondary" type="button" id="googleButton">Continue with Google</button>
+          <p class="message" id="authMessage" role="status"></p>
+        </form>
+      </section>
+
+      <section class="app-panel is-hidden" id="appPanel">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Today</p>
+            <h2>Todo Workspace</h2>
+          </div>
+          <div class="userbar">
+            <span id="userEmail"></span>
+            <button class="ghost" type="button" id="logoutButton">Logout</button>
+          </div>
+        </header>
+
+        <section class="composer">
+          <form id="todoForm" class="task-form">
+            <input id="todoTitle" type="text" placeholder="Task title" maxlength="90" required>
+            <input id="todoDetails" type="text" placeholder="Details or next action" maxlength="220">
+            <select id="todoStatus" aria-label="Task status">
+              <option value="do">Do</option>
+              <option value="did">Did</option>
+              <option value="done">Done</option>
+              <option value="block">Block</option>
+            </select>
+            <button class="primary" type="submit">Add task</button>
+          </form>
+        </section>
+
+        <div class="workspace">
+          <section class="board" id="board" aria-label="Todo board"></section>
+
+          <aside class="notes">
+            <div class="notes-head">
+              <div>
+                <p class="eyebrow">Tree Notes</p>
+                <h3>Notes</h3>
+              </div>
+              <button class="icon-button" type="button" id="rootNoteButton" title="Add root note">+</button>
+            </div>
+            <form class="note-editor" id="noteForm">
+              <input id="noteTitle" type="text" placeholder="Note title" maxlength="100" required>
+              <textarea id="noteBody" rows="5" placeholder="Write the note"></textarea>
+              <div class="note-actions">
+                <button class="secondary" type="button" id="cancelNoteButton">Cancel</button>
+                <button class="primary" type="submit">Save note</button>
+              </div>
+            </form>
+            <div class="tree" id="noteTree"></div>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <template id="taskTemplate">
+      <article class="task-card">
+        <div class="task-main">
+          <h4></h4>
+          <p></p>
+        </div>
+        <div class="task-tools">
+          <select aria-label="Change status">
+            <option value="do">Do</option>
+            <option value="did">Did</option>
+            <option value="done">Done</option>
+            <option value="block">Block</option>
+          </select>
+          <button type="button" class="text-button">Delete</button>
+        </div>
+      </article>
+    </template>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

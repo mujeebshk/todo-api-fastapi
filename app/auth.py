@@ -1,4 +1,5 @@
 import os
+import requests
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
 from passlib.context import CryptContext
@@ -12,7 +13,11 @@ from app import models
 load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("ALGORITHM")
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY environment variable is required")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
+FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID")
+GOOGLE_CERTS_URL = "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com"
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -24,15 +29,32 @@ def get_current_user(
     db: Session = Depends(get_db)
 ):
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = int(payload.get("sub"))
-    except (JWTError, ValueError, TypeError):
-        raise HTTPException(status_code=401, detail="Unauthorized")
+        certs = requests.get(GOOGLE_CERTS_URL).json()
+        header = jwt.get_unverified_header(token)
+        kid = header.get("kid")
+        public_key = certs.get(kid)
+        
+        payload = jwt.decode(
+            token, 
+            public_key, 
+            algorithms=["RS256"], 
+            audience=FIREBASE_PROJECT_ID, 
+            issuer=f"https://securetoken.google.com/{FIREBASE_PROJECT_ID}"
+        )
+        user_email = payload.get("email")
+        if not user_email:
+            raise HTTPException(status_code=401, detail="Invalid token: missing email")
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Unauthorized: {str(e)}")
 
-    user = db.query(models.User).filter(models.User.id == user_id).first()
+    user = db.query(models.User).filter(models.User.email == user_email).first()
 
     if not user:
-        raise HTTPException(status_code=401, detail="Unauthorized")
+        # Auto-register user if they exist in Firebase but not in local DB
+        user = models.User(email=user_email, name=payload.get("name", user_email.split('@')[0]))
+        db.add(user)
+        db.commit()
+        db.refresh(user)
 
     return user
 

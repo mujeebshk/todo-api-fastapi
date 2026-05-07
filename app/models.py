@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from app.database import Base
 from datetime import datetime
 
@@ -10,15 +10,24 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     password = Column(String)
 
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
-
 class Todo(Base):
     __tablename__ = "todos"
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
-    description = Column(String, nullable=False)
-    status = Column(String, default="pending")
+    details = Column(String, nullable=False)
+    status = Column(String, default="do")
+    owner_id = Column(Integer, ForeignKey("users.id"))
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class Note(Base):
+    __tablename__ = "notes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    body = Column(String)
+    parent_id = Column(Integer, ForeignKey("notes.id"), nullable=True)
     owner_id = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
