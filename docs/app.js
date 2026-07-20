@@ -549,6 +549,7 @@ function openNoteModal(id){
     if(!selectedModalNote) return;
     modalNoteTitle.textContent=selectedModalNote.title;
     modalNoteBody.textContent=selectedModalNote.body||"";
+    modalTree.innerHTML = "";
     renderModalTree(id);
     noteModalBackdrop.classList.remove("is-hidden");
     requestAnimationFrame(()=>{
@@ -561,6 +562,40 @@ function closeModal(){
     setTimeout(()=>{
         noteModalBackdrop.classList.add("is-hidden");
     },220);
+}
+
+function renderModalTree(rootId) {
+  modalTree.innerHTML = "";
+  const root = notes.find((n) => n.id === rootId);
+  if (!root) return;
+  const rootNode = createModalTreeNode(root);
+  modalTree.append(rootNode);
+}
+
+function createModalTreeNode(note) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "modal-tree-node";
+  const item = document.createElement("div");
+  item.className = "modal-tree-item";
+  item.innerHTML = `
+      <span>📄</span>
+      <span>${note.title}</span>
+  `;
+  item.addEventListener("click", () => {
+    selectedModalNote = note;
+    modalNoteTitle.textContent = note.title;
+    modalNoteBody.textContent = note.body || "";
+    modalTree
+      .querySelectorAll(".modal-tree-item")
+      .forEach((el) => el.classList.remove("active"));
+    item.classList.add("active");
+  });
+  wrapper.append(item);
+  const children = notes.filter((n) => n.parentId === note.id);
+  children.forEach((child) => {
+    wrapper.append(createModalTreeNode(child));
+  });
+  return wrapper;
 }
 
 async function refreshData() {
