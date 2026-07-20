@@ -555,3 +555,294 @@ h2 {
     grid-template-columns: repeat(4, minmax(250px, 82vw));
   }
 }
+
+/* ==========================================================
+   Saved Notes List
+========================================================== */
+
+.saved-notes{
+  display:grid;
+  gap:12px;
+  margin-top:8px;
+}
+
+.saved-notes-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.saved-notes-header h4{
+  margin:0;
+  font-size:15px;
+}
+
+.saved-notes-header span{
+  min-width:28px;
+  height:28px;
+  display:grid;
+  place-items:center;
+  border-radius:999px;
+  background:#ebe6dc;
+  color:var(--muted);
+  font-size:.8rem;
+  font-weight:700;
+}
+
+.saved-note-list{
+  display:grid;
+  gap:10px;
+  max-height:380px;
+  overflow-y:auto;
+  padding-right:4px;
+}
+
+.saved-note-list::-webkit-scrollbar{
+  width:7px;
+}
+
+.saved-note-list::-webkit-scrollbar-thumb{
+  background:#d7d1c5;
+  border-radius:20px;
+}
+
+.saved-note-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 14px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:white;
+  cursor:pointer;
+  transition:
+      transform .18s ease,
+      box-shadow .18s ease,
+      border-color .18s ease;
+}
+
+.saved-note-item:hover{
+  transform:translateY(-2px);
+  border-color:var(--accent);
+  box-shadow:0 12px 26px rgba(0,0,0,.08);
+}
+
+.saved-note-icon{
+  font-size:20px;
+}
+
+.saved-note-title{
+  flex:1;
+  font-weight:600;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+/* ==========================================================
+   Modal
+========================================================== */
+
+.note-modal-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:5000;
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+
+  background:rgba(0,0,0,.45);
+
+  backdrop-filter:blur(8px);
+
+  opacity:0;
+  visibility:hidden;
+
+  transition:
+      opacity .25s ease,
+      visibility .25s ease;
+}
+
+.note-modal-backdrop.show{
+  opacity:1;
+  visibility:visible;
+}
+
+.note-modal{
+  width:min(900px,92vw);
+  max-height:88vh;
+
+  display:flex;
+  flex-direction:column;
+
+  background:var(--panel);
+
+  border-radius:18px;
+
+  border:1px solid var(--line);
+
+  overflow:hidden;
+
+  box-shadow:
+      0 30px 80px rgba(0,0,0,.22);
+
+  transform:translateY(25px) scale(.96);
+
+  transition:
+      transform .25s ease;
+}
+
+.note-modal-backdrop.show .note-modal{
+  transform:translateY(0) scale(1);
+}
+
+.note-modal-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  padding:18px 22px;
+
+  border-bottom:1px solid var(--line);
+
+  background:white;
+}
+
+.note-modal-header h3{
+  margin:0;
+  font-size:22px;
+}
+
+.note-modal-body{
+
+  display:grid;
+
+  grid-template-columns:320px 1fr;
+
+  min-height:420px;
+
+  overflow:hidden;
+}
+
+.modal-tree{
+
+  overflow:auto;
+
+  border-right:1px solid var(--line);
+
+  background:#faf8f3;
+
+  padding:18px;
+}
+
+.modal-note-content{
+
+  overflow:auto;
+
+  padding:26px;
+}
+
+.modal-note-content p{
+
+  margin:0;
+
+  line-height:1.75;
+
+  color:var(--ink);
+
+  white-space:pre-wrap;
+}
+
+.note-modal-footer{
+
+  display:flex;
+
+  justify-content:flex-end;
+
+  gap:12px;
+
+  padding:18px;
+
+  border-top:1px solid var(--line);
+
+  background:white;
+}
+
+/* ==========================================================
+   Tree inside modal
+========================================================== */
+
+.modal-tree-node{
+
+  margin-left:18px;
+
+  padding-left:12px;
+
+  border-left:2px solid #e4ddd0;
+}
+
+.modal-tree-item{
+
+  display:flex;
+
+  align-items:center;
+
+  gap:8px;
+
+  padding:9px 10px;
+
+  margin:6px 0;
+
+  border-radius:8px;
+
+  cursor:pointer;
+
+  transition:.18s;
+}
+
+.modal-tree-item:hover{
+
+  background:#eef7f6;
+}
+
+.modal-tree-item.active{
+
+  background:#d8f0ed;
+
+  color:var(--accent);
+
+  font-weight:700;
+}
+
+/* ==========================================================
+   Mobile
+========================================================== */
+
+@media(max-width:900px){
+
+.note-modal{
+
+width:96vw;
+
+max-height:94vh;
+
+}
+
+.note-modal-body{
+
+grid-template-columns:1fr;
+
+}
+
+.modal-tree{
+
+max-height:220px;
+
+border-right:none;
+
+border-bottom:1px solid var(--line);
+
+}
+
+}
