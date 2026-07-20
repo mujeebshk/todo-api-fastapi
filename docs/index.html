@@ -171,7 +171,14 @@
                 <button class="primary" type="submit">Save note</button>
               </div>
             </form>
-            <div class="tree" id="noteTree"></div>
+         <div class="saved-notes">
+  <div class="saved-notes-header">
+    <h4>Saved Notes</h4>
+    <span id="savedNoteCount">0</span>
+  </div>
+
+  <div class="saved-note-list" id="noteTree"></div>
+</div>
           </aside>
         </div>
       </section>
@@ -194,7 +201,69 @@
         </div>
       </article>
     </template>
+<!-- Note Viewer Modal -->
 
+<div class="note-modal-backdrop is-hidden" id="noteModalBackdrop">
+  <div class="note-modal">
+
+    <div class="note-modal-header">
+
+      <h3 id="modalNoteTitle">
+        Note
+      </h3>
+
+      <button
+        id="closeNoteModal"
+        class="icon-button"
+        type="button">
+        ✕
+      </button>
+
+    </div>
+
+    <div class="note-modal-body">
+
+      <div class="modal-note-content">
+
+        <p id="modalNoteBody"></p>
+
+      </div>
+
+      <div
+        id="modalTree"
+        class="modal-tree">
+
+      </div>
+
+    </div>
+
+    <div class="note-modal-footer">
+
+      <button
+        id="modalChildButton"
+        class="secondary"
+        type="button">
+        Child
+      </button>
+
+      <button
+        id="modalEditButton"
+        class="secondary"
+        type="button">
+        Edit
+      </button>
+
+      <button
+        id="modalDeleteButton"
+        class="text-button"
+        type="button">
+        Delete
+      </button>
+
+    </div>
+
+  </div>
+</div>
     <script type="module" src="./app.js"></script>
   </body>
 </html>
