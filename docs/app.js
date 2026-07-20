@@ -64,6 +64,19 @@ const noteTree = document.querySelector("#noteTree");
 const rootNoteButton = document.querySelector("#rootNoteButton");
 const cancelNoteButton = document.querySelector("#cancelNoteButton");
 
+const noteModalBackdrop = document.querySelector("#noteModalBackdrop");
+const closeNoteModal = document.querySelector("#closeNoteModal");
+
+const modalNoteTitle = document.querySelector("#modalNoteTitle");
+const modalNoteBody = document.querySelector("#modalNoteBody");
+const modalTree = document.querySelector("#modalTree");
+
+const modalChildButton = document.querySelector("#modalChildButton");
+const modalEditButton = document.querySelector("#modalEditButton");
+const modalDeleteButton = document.querySelector("#modalDeleteButton");
+
+const savedNoteCount = document.querySelector("#savedNoteCount");
+
 let auth;
 let db;
 let activeUser = null;
@@ -74,6 +87,7 @@ let editingNoteId = null;
 let parentNoteId = null;
 let unsubscribeTodos = null;
 let unsubscribeNotes = null;
+let selectedModalNote = null;
 
 function debugLog(label, data = {}) {
   if (!debugEnabled) return;
@@ -444,16 +458,27 @@ function renderTask(todo) {
 
 function renderNotes() {
   noteTree.innerHTML = "";
-
-  if (!notes.length) {
+  savedNoteCount.textContent = notes.length;
+  const rootNotes = notes.filter(n => !n.parentId);
+  if (!rootNotes.length) {
     const empty = document.createElement("p");
     empty.className = "empty";
     empty.textContent = "No notes yet";
     noteTree.append(empty);
     return;
   }
-
-  buildNoteBranch(null).forEach((node) => noteTree.append(node));
+  rootNotes.forEach(note=>{
+      const item=document.createElement("div");
+      item.className="saved-note-item";
+      item.innerHTML=`
+        <span class="saved-note-icon">📄</span>
+        <span class="saved-note-title">
+            ${note.title}
+        </span>
+      `;
+      item.onclick=()=>openNoteModal(note.id);
+      noteTree.append(item);
+  });
 }
 
 function buildNoteBranch(parentId) {
@@ -517,6 +542,25 @@ function clearNoteForm() {
   editingNoteId = null;
   parentNoteId = null;
   noteForm.reset();
+}
+
+function openNoteModal(id){
+    selectedModalNote=notes.find(n=>n.id===id);
+    if(!selectedModalNote) return;
+    modalNoteTitle.textContent=selectedModalNote.title;
+    modalNoteBody.textContent=selectedModalNote.body||"";
+    renderModalTree(id);
+    noteModalBackdrop.classList.remove("is-hidden");
+    requestAnimationFrame(()=>{
+        noteModalBackdrop.classList.add("show");
+    });
+}
+
+function closeModal(){
+    noteModalBackdrop.classList.remove("show");
+    setTimeout(()=>{
+        noteModalBackdrop.classList.add("is-hidden");
+    },220);
 }
 
 async function refreshData() {
@@ -655,6 +699,45 @@ document.addEventListener("click", (event) => {
 logoutButton.addEventListener("click", () => {
   closeAccountMenu();
   signOut(auth);
+});
+
+closeNoteModal.addEventListener("click",closeModal);
+noteModalBackdrop.addEventListener("click",(e)=>{
+   if(e.target===noteModalBackdrop){
+      closeModal();
+   }
+});
+document.addEventListener("keydown",(e)=>{
+   if(e.key==="Escape"){
+      closeModal();
+   }
+});
+
+modalEditButton.addEventListener("click",()=>{
+   if(!selectedModalNote) return;
+   closeModal();
+   startNote({note:selectedModalNote});
+});
+
+modalChildButton.addEventListener("click",()=>{
+   if(!selectedModalNote) return;
+   closeModal();
+   startNote({
+      parentId:selectedModalNote.id
+   });
+});
+
+modalDeleteButton.addEventListener("click",async()=>{
+   if(!selectedModalNote) return;
+   try{
+      await removeNote(selectedModalNote.id);
+      closeModal();
+      await refreshData();
+   }
+   catch(error){
+      debugError("Delete note failed",error);
+      setMessage(formatError(error));
+   }
 });
 
 todoForm.addEventListener("submit", async (event) => {
